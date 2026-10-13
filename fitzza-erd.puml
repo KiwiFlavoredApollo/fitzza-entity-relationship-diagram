@@ -524,7 +524,7 @@ package "survey_db" {
 }
 
 users ||--o| user_body_profile : "user_id"
-users ||..o{ user_measurement_preference : "user_id [logical]"
+users ||--o{ user_measurement_preference : "user_id"
 brand ||--o{ product : "brand_id"
 product ||--o{ product_option : "product_id"
 product_option ||--o| product_measurement : "option_id"
@@ -566,7 +566,7 @@ users ||--o{ ai_fitting : "user_id"
 outfit_combo ||--o{ ai_fitting : "combo_id"
 users ||..o{ size_survey : "user_id [logical]"
 product_option ||..o{ size_survey : "option_id [logical]"
-order_item ||..o{ size_survey : "order_item_id [logical]"
+order_item ||..o| size_survey : "order_item_id [logical]"
 product |o..o{ wishlist : "item_id [PRODUCT]"
 outfit_combo |o..o{ wishlist : "item_id [COMBO]"
 product |o..o{ vote_option : "item_id [PRODUCT]"
@@ -583,7 +583,7 @@ legend bottom left
   Solid line : FK stated in specification
   Dotted line : logical, inferred, or conditional reference
   Parent || : required reference; |o : nullable/conditional reference
-  Child o{ : zero or more; o| : zero or one (shared primary key)
+  Child o{ : zero or more; o| : zero or one (shared primary key or UNIQUE FK)
   Gray entity : unused in source specification
   ENUM / VARCHAR without details and missing types are preserved as specified
 endlegend

@@ -10,7 +10,7 @@ Items requiring clarification in the specification:
 - `ai_fitting.completed_at` is NOT NULL even though a pending job has no completion time.
 - `size_survey.order_item_id` has both a column UNIQUE constraint and a composite UNIQUE in its notes; both are preserved.
 - Polymorphic references depend on their type discriminator and cannot be enforced by an ordinary FK to multiple tables.
-- Child counts are shown as zero or more unless a shared primary key enforces zero or one. Business minimums are not inferred.
+- Child counts are shown as zero or more unless a shared primary key or UNIQUE FK enforces zero or one. Business minimums are not inferred.
 
 ## Generate images on tag push
 
