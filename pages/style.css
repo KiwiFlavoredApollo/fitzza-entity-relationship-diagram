@@ -1,0 +1,21 @@
+:root { font-family: "Noto Sans KR", "Malgun Gothic", sans-serif; color: #172c3b; background: #f4f7f9; }
+* { box-sizing: border-box; }
+body { margin: 0; }
+header, main { padding: 24px clamp(16px, 4vw, 56px); }
+header { background: #172c3b; color: white; }
+.eyebrow { color: #8cddd0; letter-spacing: .15em; font-size: 12px; }
+h1 { font-size: clamp(24px, 4vw, 36px); margin: 12px 0; }
+header p:last-child { color: #c7d6df; }
+.toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+select, button { font: inherit; padding: 8px 12px; border: 1px solid #bdcdd7; border-radius: 6px; background: white; color: inherit; }
+button { cursor: pointer; }
+button:disabled { cursor: default; opacity: .5; }
+a { color: #006c61; }
+:focus-visible { outline: 3px solid #008878; outline-offset: 3px; }
+#status { font-size: 14px; min-height: 20px; }
+#viewport { height: 68vh; overflow: auto; border: 1px solid #d4dfe6; border-radius: 8px; background: white; }
+#diagram { padding: 20px; width: max-content; min-width: 100%; }
+#diagram svg { display: block; max-width: none !important; }
+details { margin-top: 20px; }
+summary { cursor: pointer; }
+pre { overflow: auto; padding: 20px; background: #e8eef2; font-size: 13px; }

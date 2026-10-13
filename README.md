@@ -1,5 +1,23 @@
 # Fitzza ERD
 
+## GitHub Pages에서 Mermaid 보기
+
+[Deploy Mermaid to GitHub Pages](.github/workflows/deploy-pages.yml)는 `main` 브랜치의 Mermaid 원본, 페이지 코드 또는 배포 설정이 변경되면 뷰어를 빌드하고 배포합니다. Actions에서 수동 실행할 수도 있습니다.
+
+1. 저장소의 **Settings → Pages → Build and deployment → Source**를 **GitHub Actions**로 설정합니다. [GitHub Pages 공식 안내](https://docs.github.com/en/pages/getting-started-with-github-pages/using-custom-workflows-with-github-pages)를 참고하세요.
+2. 변경 사항을 `main`에 푸시하거나 Actions에서 **Deploy Mermaid to GitHub Pages → Run workflow**를 실행합니다.
+3. 성공한 워크플로의 `github-pages` 환경 또는 Settings → Pages에 표시되는 주소를 엽니다.
+
+페이지에서 전체 ERD, 테이블 개요, 도메인별 ERD를 선택하고 확대·축소할 수 있습니다. 선택한 다이어그램은 URL 해시로 공유할 수 있고, Mermaid 원본을 확인하거나 다운로드할 수 있습니다. `.mmd`는 브라우저에서 SVG로 렌더링하며, 기존 `layout: elk` 설정을 지원하는 Mermaid 12.0.0을 jsDelivr CDN에서 불러옵니다. 따라서 CDN에 접근할 수 있어야 합니다.
+
+로컬 빌드에는 별도 패키지 설치가 필요 없습니다.
+
+```sh
+node scripts/build_pages.mjs
+```
+
+결과는 `build/pages/`에 생성됩니다. 로컬 미리보기는 이 폴더를 HTTP 서버로 제공해야 합니다 (`file://`로 열면 원본 파일을 불러올 수 없습니다). 배포에는 커밋된 `.mmd`를 그대로 사용하므로 도메인별 파일을 갱신하려면 먼저 `node scripts/generate_mermaid.mjs`를 실행하고 결과를 커밋하세요.
+
 ## Mermaid ERD
 
 - [전체 ERD 보기](fitzza-erd.md): GitHub에서 Mermaid 다이어그램을 바로 표시합니다.

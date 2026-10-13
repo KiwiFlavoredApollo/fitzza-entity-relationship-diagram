@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Fitzza ERD</title>
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+  <header>
+    <p class="eyebrow">FITZZA · DATABASE</p>
+    <h1>Entity Relationship Diagram</h1>
+    <p>전체 구조부터 도메인별 관계까지, Mermaid 원본으로 살펴보세요.</p>
+  </header>
+  <main>
+    <div class="toolbar">
+      <label for="diagram-select">다이어그램</label>
+      <select id="diagram-select" disabled></select>
+      <button id="zoom-out" type="button" aria-label="축소" disabled>−</button>
+      <output id="zoom-level">100%</output>
+      <button id="zoom-in" type="button" aria-label="확대" disabled>+</button>
+      <button id="fit" type="button" disabled>화면에 맞추기</button>
+      <a id="source" hidden download>Mermaid 원본 다운로드</a>
+    </div>
+    <p id="status" role="status" aria-live="polite">다이어그램을 불러오는 중입니다…</p>
+    <div id="viewport" tabindex="0" aria-label="다이어그램 보기, 큰 다이어그램은 스크롤하여 탐색하세요">
+      <div id="diagram"></div>
+    </div>
+    <details><summary>Mermaid 소스 보기</summary><pre id="code"></pre></details>
+  </main>
+  <noscript>다이어그램을 보려면 JavaScript를 활성화해주세요.</noscript>
+  <script type="module" src="./app.mjs"></script>
+</body>
+</html>

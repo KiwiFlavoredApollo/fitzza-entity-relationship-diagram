@@ -1,0 +1,48 @@
+name: Deploy Mermaid to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'fitzza-erd.mmd'
+      - 'diagrams/mermaid/**'
+      - 'pages/**'
+      - 'scripts/build_pages.mjs'
+      - '.github/workflows/deploy-pages.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: github-pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '24'
+      - uses: actions/configure-pages@v5
+      - name: Build Mermaid viewer
+        run: node scripts/build_pages.mjs
+      - uses: actions/upload-pages-artifact@v4
+        with:
+          path: build/pages
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-24.04
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
