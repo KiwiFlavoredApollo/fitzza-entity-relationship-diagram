@@ -1,0 +1,591 @@
+@startuml fitzza-erd
+' Source: https://docs.google.com/spreadsheets/d/11iPQ3YFhEUBNp-2VAse4qQpHFEm6ymTOGz5_9-XCA6Y/edit#gid=448104477
+' Snapshot: 2026-10-13. English table names are inferred from Korean labels/references.
+!pragma layout smetana
+left to right direction
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName SansSerif
+skinparam linetype ortho
+skinparam shadowing false
+skinparam packageStyle rectangle
+skinparam entityBackgroundColor #F8FAFC
+skinparam entityBorderColor #475569
+hide circle
+title Fitzza ERD — 테이블 명세서
+
+package "user_db" {
+  entity "users\n회원" as users {
+    ' Row 4: 사용자 아이디
+    * user_id : PK, INT, NOT NULL, AUTO_INCREMENT
+    ' Row 5: 이메일 — 이메일로 로그인 (소셜 로그인 미지원)
+    * email : UNIQUE, VARCHAR(255), NOT NULL
+    ' Row 6: 비밀번호 — 해시값 저장 (평문 저장 금지)
+    * password : VARCHAR(255), NOT NULL
+    ' Row 7: 닉네임
+    * nickname : UNIQUE, VARCHAR(50), NOT NULL
+    ' Row 8: 계정 상태
+    status : ENUM('ACTIVE', 'SUSPENDED', 'DELETED') DEFAULT 'ACTIVE'
+    ' Row 9: 가입일
+    * created_at : DEFAULT CURRENT_TIMESTAMP, NOT NULL
+    ' Row 10: 수정일
+    updated_at : DATETIME, DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+  }
+  entity "user_body_profile\n사용자 신체정보" as user_body_profile {
+    ' Row 11: 사용자 아이디 — user_db.users 참조
+    * user_id : PK, FK, INT, NOT NULL
+    ' Row 12: 키 — NULL 허용 — 온보딩에서 건너뛸 수 있음(PRF-01), 미입력 시 사이즈 추천 생략
+    height : FLOAT
+    ' Row 13: 체중 — NULL 허용 — 온보딩에서 건너뛸 수 있음(PRF-01), 미입력 시 사이즈 추천 생략
+    weight : FLOAT
+    ' Row 14: 성별 — NULL
+    gender : ENUM("W", "M")
+    ' Row 15: 퍼스널 컬러 — MVP 미사용 — 요구사항 정의서에 해당 기능 없음 (추후 확장용)
+    personal_color : ENUM
+    ' Row 16: 선호 스타일 — 복수 선택 가능해야 함 — 단일 ENUM으로는 다중 스타일 선호 표현 불가, 콤마 구분 다중값 또는 별도 매핑 테이블 필요 (포맷 미정이라 임시로 NULL 허용, 확정 후 NOT NULL 재검토)
+    preferred_styles : VARCHAR, NULL
+    ' Row 17: 체형 — PRF-01 체형 선택 — 값 목록은 코드 상수로 관리
+    body_type : VARCHAR(50), NULL
+    ' Row 18: 선호 핏 — PRF-01 핏 선호 선택 — 상품 fit_type과 같은 값(regular/relaxed/slim/oversized 등) 사용
+    preferred_fit : VARCHAR(50), NULL
+    ' Row 19: 신발사이즈
+    shoe_size : INT
+    ' Row 20: 수정일
+    updated_at : DATETIME, DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+  }
+}
+
+package "user_preferences_db" {
+  entity "user_measurement_preference\n사용자 선호 실측" as user_measurement_preference {
+    ' Row 21: 선호도 아이디 — PK
+    * preference_id : PK, INT, NOT NULL, AUTO_INCREMENT
+    ' Row 22: 사용자 아이디 — NOT NULL, FK(users)
+    * user_id : INT, NOT NULL <<FK>>
+    ' Row 23: 서브 카테고리 — NOT NULL
+    * subcategory : VARCHAR(100), NOT NULL
+    ' Row 24: 핏 — NOT NULL
+    * fit_type : VARCHAR(100), NOT NULL
+    ' Row 25: 선호 실측 — NOT NULL
+    * preference_spec : JSON, NOT NULL
+    ' Row 26: 누적 샘플 수 — NOT NULL
+    * sample_count : INT, NOT NULL, DEFAULT 1
+    ' Row 27: 등록일 — NOT NULL
+    * created_at : DEFAULT CURRENT_TIMESTAMP, NOT NULL
+    ' Row 28: 수정일
+    updated_at : DATETIME, DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+  }
+}
+
+package "product_db" {
+  entity "brand\n브랜드" as brand {
+    ' Row 29: 브랜드 아이디
+    * brand_id : PK, INT, NOT NULL, AUTO_INCREMENT
+    ' Row 30: 브랜드명
+    * brand_name : VARCHAR(100), NOT NULL, UNIQUE
+  }
+  entity "product\n상품" as product {
+    ' Row 31: 상품 아이디
+    * product_id : PK, INT, NOT NULL, AUTO_INCREMENT
+    ' Row 32: 브랜드 아이디 — brand 참조
+    * brand_id : FK, INT, NOT NULL
+    ' Row 33: 상품명
+    * product_name : VARCHAR(255), NOT NULL
+    ' Row 34: 카테고리 — 기존 category 유지(하위 호환) 또는 제거 협의 필요
+    * category : VARCHAR(100), NOT NULL
+    ' Row 35: 대분류 카테고리 — 예: 상의 — 기존 'category' 하나로는 계층형 카테고리 탐색(상의>긴팔>셔츠) 구현 불가
+    * category_1 : VARCHAR, NOT NULL
+    ' Row 36: 중분류 카테고리 — 예: 긴팔
+    * category_2 : VARCHAR, NOT NULL
+    ' Row 37: 소분류 카테고리 — 예: 셔츠
+    * subcategory : VARCHAR, NOT NULL
+    ' Row 38: 기본 가격
+    * price : INT, NOT NULL
+    ' Row 39: 소재
+    material : VARCHAR(100)
+    ' Row 40: 계절 — NULL
+    season : ENUM("SS", "FW", "ALL")
+    ' Row 41: 핏 — NULL
+    fit_type : ENUM("REGULAR", "RELAXED", "CROPPED", "SLIM", "OVERSIZED")
+    ' Row 42: 상품 설명
+    description : TEXT
+    ' Row 43: 대표 이미지 URL
+    image_url : VARCHAR(500)
+    ' Row 44: 판매 상태
+    status : ENUM('ON_SALE', 'SOLD_OUT', 'HIDDEN') DEFAULT 'ON_SALE'
+    ' Row 45: 등록일
+    * created_at : DEFAULT CURRENT_TIMESTAMP, NOT NULL
+    ' Row 46: 수정일
+    updated_at : DATETIME, DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+  }
+  entity "product_option\n상품 옵션" as product_option {
+    ' Row 47: 옵션 아이디
+    * option_id : PK, INT, NOT NULL, AUTO_INCREMENT
+    ' Row 48: 상품 아이디
+    * product_id : FK, INT, NOT NULL
+    ' Row 49: 색상
+    color : VARCHAR(50)
+    ' Row 50: 사이즈
+    size : VARCHAR(50)
+  }
+  entity "product_measurement\n상품 실측" as product_measurement {
+    ' Row 51: 옵션 아이디 — product_option 참조 — 사이즈별로 실측값이 다르므로 product_id가 아닌 option_id 기준으로 변경
+    * option_id : PK, FK, INT, NOT NULL
+    ' Row 52: 실측
+    measurement_spec : JSON
+  }
+}
+
+package "order_db" {
+  entity "orders\n주문" as orders {
+    ' Row 53: 주문 아이디
+    * order_id : PK, INT, NOT NULL, AUTO_INCREMENT
+    ' Row 54: 주문 번호
+    * order_num : UNIQUE, VARCHAR(100), NOT NULL
+    ' Row 55: 사용자 아이디
+    * user_id : FK, INT, NOT NULL
+    ' Row 56: 총 주문 금액
+    * total_price : INT, NOT NULL
+    ' Row 57: 주문 상태
+    order_status : ENUM('PENDING', 'PAID', 'SHIPPING', 'COMPLETED', 'CANCELED') DEFAULT 'PENDING'
+    ' Row 58: 주문일
+    * created_at : DEFAULT CURRENT_TIMESTAMP, NOT NULL
+    ' Row 59: 수정일
+    updated_at : DATETIME, DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    ' Row 60: 수령인명 — 배송지 수령인
+    * recipient_name : VARCHAR(50), NOT NULL
+    ' Row 61: 수령인 연락처 — 배송지 연락처
+    * recipient_phone : VARCHAR(20), NOT NULL
+    ' Row 62: 배송지 주소 — 상세주소 포함
+    * shipping_address : VARCHAR(255), NOT NULL
+  }
+  entity "order_item\n주문 항목" as order_item {
+    ' Row 63: 주문항목 아이디
+    * order_item_id : PK, INT, NOT NULL, AUTO_INCREMENT
+    ' Row 64: 주문 아이디
+    * order_id : FK, INT, NOT NULL
+    ' Row 65: 옵션 아이디
+    * option_id : FK, INT, NOT NULL
+    ' Row 66: 주문 수량
+    * order_qty : INT, NOT NULL
+    ' Row 67: 구매 단가
+    * unit_price : INT, NOT NULL
+  }
+}
+
+package "review_db" {
+  entity "review\n리뷰" as review {
+    ' Row 68: 리뷰 아이디
+    * review_id : PK, INT, NOT NULL, AUTO_INCREMENT
+    ' Row 69: 작성자 아이디 — user_db.users 참조
+    * user_id : FK(logical), INT, NOT NULL
+    ' Row 70: 상품 아이디 — product_db.product 참조
+    * product_id : FK(logical), INT, NOT NULL
+    ' Row 71: 주문 항목 아이디 — order_db.order_item 참조, 구매 인증 리뷰용 — 비구매 리뷰 허용 여부 논의 필요
+    order_item_id : FK(logical), INT, NULL
+    ' Row 72: 평점 — 1~5
+    * rating : INT, NOT NULL
+    ' Row 73: 리뷰 내용
+    * content : TEXT, NOT NULL
+    ' Row 74: 첨부 이미지 URL
+    image_url : VARCHAR(500), NULL
+    ' Row 75: 작성일
+    * created_at : DATETIME, NOT NULL, DEFAULT CURRENT_TIMESTAMP
+    ' Row 76: 수정일
+    updated_at : DATETIME, DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+  }
+}
+
+package "wishlist_db" {
+  entity "wishlist\n찜한 상품" as wishlist {
+    ' Row 77: 찜 아이디
+    * wishlist_id : PK, INT, NOT NULL, AUTO_INCREMENT
+    ' Row 78: 사용자 아이디 — UNIQUE(user_id, item_id, item_type) 복합 유니크 — 중복 챜하기 방지
+    * user_id : FK, INT, NOT NULL
+    ' Row 79: 상품/코디 아이디 — PRODUCT일 땐 product_id(INT), COMBO일 땐 combo_id(VARCHAR/UUID) 참조 — 폴리모픽 FK라 컬럼 타입을 VARCHAR로 통일 (기존 INT로는 COMBO의 UUID 저장 불가)
+    * item_id : FK, VARCHAR, NOT NULL
+    ' Row 80: 아이템 타입 — item_id가 product인지 outfit_combo인지 구분
+    * item_type : ENUM('PRODUCT', 'COMBO'), NOT NULL
+    ' Row 81: 찜한 날짜
+    * created_at : DEFAULT CURRENT_TIMESTAMP, NOT NULL
+    --
+    UNIQUE(user_id, item_id, item_type)
+  }
+  entity "worldcup_history\n월드컵 우승 이력" as worldcup_history {
+    ' Row 82: 월드컵 이력 아이디 — 월드컵을 완료할 때마다 새 이력 저장
+    * worldcup_history_id : PK, INT, NOT NULL, AUTO_INCREMENT
+    ' Row 83: 사용자 아이디 — user_db.users 참조
+    * user_id : FK(logical), INT, NOT NULL
+    ' Row 84: 우승 상품 아이디 — product_db.product(product_id) 참조. 과거 기록 보존을 위해 상품 물리 삭제 제한
+    * winner_product_id : FK(logical), INT, NOT NULL
+    ' Row 85: 완료 시각 — 최근 우승 결과 조회에 사용
+    * completed_at : DATETIME, NOT NULL, DEFAULT CURRENT_TIMESTAMP
+  }
+}
+
+package "cart_db" {
+  entity "cart\n장바구니" as cart {
+    ' Row 86: 장바구니 아이디
+    * cart_id : PK, INT, NOT NULL, AUTO_INCREMENT
+    ' Row 87: 사용자 아이디 — UNIQUE(user_id, option_id) 복합 유니크 — 같은 옵션 재담기 시 quantity 증가로 처리
+    * user_id : FK, INT, NOT NULL
+    ' Row 88: 상품 옵션 아이디
+    * option_id : FK, INT, NOT NULL
+    ' Row 89: 수량
+    * quantity : INT, NOT NULL, DEFAULT 1
+    ' Row 90: 담은 날짜
+    * created_at : DEFAULT CURRENT_TIMESTAMP, NOT NULL
+    ' Row 91: 수정 날짜
+    updated_at : DATETIME, DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    --
+    UNIQUE(user_id, option_id)
+  }
+}
+
+package "recommendation_db" {
+  entity "recommendation_request\n추천 요청" as recommendation_request {
+    ' Row 92: 요청 아이디 — UUID
+    * request_id : PK, VARCHAR, NOT NULL
+    ' Row 93: 사용자 아이디 — user_db.users 참조, DB 레벨 제약 아님 — 비회원 질의는 NULL, 회원 질의는 user_id 저장 (회원만 추천 기록 조회 가능, 2026-10-08 결정)
+    user_id : FK(logical), INT, NULL
+    ' Row 94: 비회원 식별자 — 비회원 1회 제한 확인용 — 브라우저가 처음 만들어 보관하는 UUID(요청 헤더로 전달). 비회원 질의는 값 있음·user_id NULL, 회원 질의는 NULL. 같은 guest_id로 요청이 이미 있으면 거부. 브라우저 저장소를 지우면 다시 쓸 수 있음 (2026-10-08 결정)
+    guest_id : VARCHAR(36), NULL
+    ' Row 95: 원본 질의 — 사용자가 입력한 자연어 그대로
+    * query_text : TEXT, NOT NULL
+    ' Row 96: TPO 요약 — LLM이 파싱한 상황 요약
+    tpo_summary : VARCHAR(255), NULL
+    ' Row 97: 검색 타입
+    * search_type : ENUM('SINGLE', 'COORDINATION'), NOT NULL
+    ' Row 98: 계절감
+    season : ENUM("SS", "FW", "ALL"), NULL
+    ' Row 99: 총 예산 상한 — 미지정 시 NULL
+    total_max_price : INT, NULL
+    ' Row 100: 요청 시각
+    * created_at : DATETIME, NOT NULL, DEFAULT CURRENT_TIMESTAMP
+    ' Row 101: 처리 상태 — 비동기 추천 파이프라인 진행 상태 추적용
+    * status : ENUM('PENDING', 'PROCESSING', 'DONE', 'FAILED'), NOT NULL, DEFAULT 'PENDING'
+  }
+  entity "recommendation_slot\n추천 슬롯" as recommendation_slot {
+    ' Row 102: 슬롯 아이디
+    * slot_id : PK, VARCHAR, NOT NULL
+    ' Row 103: 요청 아이디 — recommendation_request 참조
+    * request_id : FK, VARCHAR, NOT NULL
+    ' Row 104: 카테고리 — top/bottom/outer/shoes/hat
+    * category : ENUM("OUTER", "TOP", "BOTTOM", "SHOES", "HAT"), NOT NULL
+    ' Row 105: 영문 키워드
+    * clip_query_en : TEXT, NOT NULL
+    ' Row 106: 색상
+    color : VARCHAR, NULL
+    ' Row 107: 슬롯별 예산 상한
+    max_price : INT, NULL
+    ' Row 108: 핏 유형
+    fit_type : ENUM("REGULAR", "RELAXED", "CROPPED", "SLIM", "OVERSIZED")
+  }
+  entity "slot_candidate\n슬롯 후보" as slot_candidate {
+    ' Row 109: 후보 아이디
+    * candidate_id : PK, VARCHAR, NOT NULL
+    ' Row 110: 슬롯 아이디 — recommendation_slot 참조
+    * slot_id : FK, VARCHAR, NOT NULL
+    ' Row 111: 상품 아이디 — product_db.product 참조
+    * product_id : FK(logical), INT, NOT NULL
+    ' Row 112: 벡터 유사도 점수 — Fashion-CLIP 코사인 유사도 기반
+    * vec_score : FLOAT, NOT NULL
+    ' Row 113: 추천 사이즈
+    reco_size : VARCHAR(20), NULL
+    ' Row 114: 사이즈 적합도
+    fit_score : FLOAT, NULL
+    ' Row 115: 순위 — 슬롯 내 벡터 점수 순위 (※ rank는 MySQL 8+ 예약어(RANK() 윈도우 함수)라 컬럼명 변경)
+    * rank_no : INT, NOT NULL
+  }
+  entity "outfit_combo\n코디 조합" as outfit_combo {
+    ' Row 116: 조합 아이디
+    * combo_id : PK, VARCHAR, NOT NULL
+    ' Row 117: 요청 아이디 — recommendation_request 참조
+    * request_id : FK, VARCHAR, NOT NULL
+    ' Row 118: 합계 가격
+    * total_price : INT, NOT NULL
+    ' Row 119: 통과 여부 — 색상/계절/TPO 게이트 통과 여부
+    * pass_status : BOOLEAN, NOT NULL
+    ' Row 120: 조화도 점수 — 80~100 조화 / 60~79 착용가능 / 50이하 탈락
+    harmony_score : FLOAT, NULL
+    ' Row 121: 피드백 요약 — GPT가 생성한 판정 사유
+    feedback_summary : TEXT, NULL
+    ' Row 122: 예산 초과 여부 — total_max_price 초과 시 TRUE
+    budget_exceeded : BOOLEAN, NULL
+  }
+  entity "recommendation_message\n추천 대화 히스토리" as recommendation_message {
+    ' Row 123: 메시지 아이디
+    * message_id : PK, VARCHAR, NOT NULL
+    ' Row 124: 요청 아이디
+    * request_id : FK, VARCHAR (recommendation_request 참조), NOT NULL
+    ' Row 125: 발신 주체
+    sender_type : ENUM('USER', 'AI')
+    ' Row 126: 메시지 내용
+    content : TEXT
+    ' Row 127: 등록일시
+    created_at : DATETIME
+  }
+  entity "combo_candidate\n조합-후보 매핑" as combo_candidate {
+    ' Row 128: 조합 아이디 — outfit_combo 참조, 다대다 매핑 복합 PK
+    * combo_id : PK, FK, VARCHAR, NOT NULL
+    ' Row 129: 후보 아이디 — slot_candidate 참조, 다대다 매핑 복합 PK
+    * candidate_id : PK, FK, VARCHAR, NOT NULL
+  }
+}
+
+package "notification_db" {
+  entity "notification_channel\n알림 채널 (미사용)" as notification_channel #EEEEEE {
+    ' Row 130: 채널 아이디 — 미사용 — 알림을 SSE로 보내기로 해 FCM 토큰 저장이 필요 없음 (2026-10-07 결정). 테이블 삭제 여부는 팀 확인 후
+    * channel_id : PK, VARCHAR, NOT NULL
+    ' Row 131: 사용자 아이디 — user_db.users 참조 — 기기(브라우저)당 1행, 한 사용자가 여러 행 가질 수 있음
+    * user_id : FK(logical), INT, NOT NULL
+    ' Row 132: 채널 타입
+    * channel_type : ENUM('IN_APP', 'PUSH'), NOT NULL
+    ' Row 133: 활성화 여부 — 무효 토큰으로 발송 실패 시 FALSE로 비활성화
+    * enabled : BOOLEAN, NOT NULL, DEFAULT TRUE
+    ' Row 134: 푸시 토큰 — FCM 웹 푸시 토큰, channel_type='PUSH'일 때 필수 — 같은 토큰 중복 등록 방지
+    push_token : UNIQUE, VARCHAR(255), NULL
+    ' Row 135: 토큰 갱신 시각 — FCM 토큰 재발급 시 갱신
+    updated_at : DATETIME, DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+  }
+  entity "notification_log\n알림 로그" as notification_log {
+    ' Row 136: 로그 아이디 — notification_db 누락 영역 보완
+    * log_id : PK, VARCHAR, NOT NULL
+    ' Row 137: 사용자 아이디
+    * user_id : FK(logical), INT, NOT NULL
+    ' Row 138: 알림 유형 — 요구사항 정의서 5장 MVP 알림 4종
+    * type : ENUM('COMMENT', 'VOTE_CLOSED', 'FITTING_DONE', 'FITTING_FAILED'), NOT NULL
+    ' Row 139: 내용
+    * content : TEXT, NOT NULL
+    ' Row 140: 이동 대상 아이디 — 댓글·투표 알림은 post_id, 피팅 알림은 fitting_id — 5장 이동 화면 연결용 (화면은 type으로 구분)
+    target_id : VARCHAR, NULL
+    ' Row 141: 이벤트 아이디 — 같은 이벤트가 재전달돼도 알림 중복 생성 방지
+    * event_id : UNIQUE, VARCHAR, NOT NULL
+    ' Row 142: 읽음 여부 — 인앱 알림 읽음 처리, 안 읽은 알림 수 계산용
+    * is_read : BOOLEAN, NOT NULL, DEFAULT FALSE
+    ' Row 143: 푸시 발송 상태 — 미사용 — SSE 전환으로 푸시 발송 결과 기록이 필요 없음 (2026-10-07 결정)
+    * push_status : ENUM('SUCCESS', 'FAILED', 'SKIPPED'), NOT NULL
+    ' Row 144: 생성 시각 — 알림 목록 최신순 정렬용
+    * created_at : DATETIME, NOT NULL, DEFAULT CURRENT_TIMESTAMP
+  }
+}
+
+package "community_db" {
+  entity "community\n커뮤니티 게시글" as community {
+    ' Row 145: 게시글 아이디
+    * post_id : PK, INT, NOT NULL, AUTO_INCREMENT
+    ' Row 146: 작성자 아이디
+    * user_id : FK, INT, NOT NULL
+    ' Row 147: 게시글 타입 — 일반글/투표글 구분
+    post_type : ENUM('NORMAL', 'VOTE') DEFAULT 'NORMAL'
+    ' Row 148: 게시글 제목
+    * title : VARCHAR(255), NOT NULL
+    ' Row 149: 게시글 내용
+    * content : TEXT, NOT NULL
+    ' Row 150: 첨부 이미지 URL — 일반 글용 이미지
+    image_url : VARCHAR(500)
+    ' Row 151: 공유 대상 타입 — COM-04 공유 글일 때 공유 대상 종류 (추천 코디 / 월드컵 결과 / 피팅 결과), 일반 글은 NULL
+    shared_type : ENUM('COMBO', 'WORLDCUP', 'FITTING'), NULL
+    ' Row 152: 공유 대상 아이디 — COMBO→combo_id, WORLDCUP→worldcup_history_id, FITTING→fitting_id
+    shared_id : FK(logical), VARCHAR, NULL
+    ' Row 153: 공유 스냅샷 — 공유 시점의 이미지·상품명·가격 등 표시용 데이터 — 다른 서비스 호출 없이 피드 렌더링
+    shared_snapshot : JSON, NULL
+    ' Row 154: 게시글 분류 — COM-05 분류 탭(패션·코디 질문·일상) — '투표' 탭은 post_type='VOTE'로 조회
+    * category : ENUM('FASHION', 'COORDI_QUESTION', 'DAILY'), NOT NULL
+    ' Row 155: 투표 마감 시각 — 투표글 생성 시 서버에서 생성 시각 + 6시간으로 자동 설정, 일반 글은 NULL
+    vote_end_at : DATETIME, NULL
+    ' Row 156: 투표 종료 여부 — 작성자 조기 종료 또는 스케줄러 마감 처리 시 TRUE — 마감 알림 중복 방지
+    * vote_closed : BOOLEAN, NOT NULL, DEFAULT FALSE
+    ' Row 157: 삭제 시각 — soft delete — 삭제된 글은 목록에서 제외, 알림으로 접근 시 '삭제된 게시글' 안내
+    deleted_at : DATETIME, NULL
+    ' Row 158: 조회수
+    * view_count : INT, NOT NULL, DEFAULT 0
+    ' Row 159: 버전 — 낙관적 잠금용 — 수정·삭제가 겹치면 늦게 끝난 요청은 409 CONCURRENT_UPDATE로 실패 (삭제된 글이 수정으로 되살아나는 것 방지, 2026-10-08 추가)
+    * version : BIGINT, NOT NULL, DEFAULT 0
+    ' Row 160: 작성일
+    * created_at : DATETIME, DEFAULT CURRENT_TIMESTAMP, NOT NULL
+    ' Row 161: 수정일
+    updated_at : DATETIME, DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+  }
+  entity "vote_option\n투표 선택지" as vote_option {
+    ' Row 162: 선택지 아이디 — 선택지 개수 제한(예: 2~4개)은 API에서 검증
+    * vote_option_id : PK, INT, NOT NULL, AUTO_INCREMENT
+    ' Row 163: 게시글 아이디 — community 참조, post_type='VOTE'인 글만
+    * post_id : FK, INT, NOT NULL
+    ' Row 164: 상품/코디 아이디 — PRODUCT일 때 product_id, COMBO일 때 combo_id(UUID), IMAGE(직접 업로드)는 NULL — UNIQUE(post_id, item_id, item_type)
+    item_id : FK(logical), VARCHAR, NULL
+    ' Row 165: 아이템 타입 — 단품 / AI 추천 코디 / 직접 업로드 사진 구분
+    * item_type : ENUM('PRODUCT', 'COMBO', 'IMAGE'), NOT NULL
+    ' Row 166: 선택지 출처 — 화면의 출처 표시(AI 추천 / 찜 / 직접 업로드)
+    * source : ENUM('AI_RECOMMEND', 'WISHLIST', 'UPLOAD'), NOT NULL
+    ' Row 167: 선택지 이미지 URL — 상품·코디는 작성 시점 이미지 스냅샷, UPLOAD는 S3 업로드 URL
+    * image_url : VARCHAR(500), NOT NULL
+    ' Row 168: 표시용 이름 — 작성 시점 상품명·코디명 스냅샷 (UPLOAD는 NULL 가능)
+    snapshot_name : VARCHAR(255), NULL
+    ' Row 169: 표시용 가격 — 작성 시점 가격 스냅샷 (UPLOAD는 NULL)
+    snapshot_price : INT, NULL
+    ' Row 170: 표시 순서 — 화면 노출 순서(1, 2, 3…)
+    * display_order : INT, NOT NULL
+    --
+    UNIQUE(post_id, item_id, item_type)
+  }
+  entity "vote\n투표 기록" as vote {
+    ' Row 171: 투표 아이디 — UUID
+    * vote_id : PK, VARCHAR, NOT NULL
+    ' Row 172: 게시글 아이디 — community 참조, UNIQUE(post_id, user_id) 복합 유니크 — 중복투표 방지
+    * post_id : FK, INT, NOT NULL
+    ' Row 173: 사용자 아이디
+    * user_id : FK(logical), INT, NOT NULL
+    ' Row 174: 선택한 선택지 — vote_option 참조 — 유저가 투표한 선택지
+    * vote_option_id : FK, INT, NOT NULL
+    ' Row 175: 투표 시각
+    * created_at : DATETIME, NOT NULL, DEFAULT CURRENT_TIMESTAMP
+    --
+    UNIQUE(post_id, user_id)
+  }
+  entity "comment\n댓글" as comment {
+    ' Row 176: 댓글 아이디
+    * comment_id : PK, INT, NOT NULL, AUTO_INCREMENT
+    ' Row 177: 게시글 아이디 — community 참조
+    * post_id : FK, INT, NOT NULL
+    ' Row 178: 작성자 아이디 — user_db.users 참조
+    * user_id : FK(logical), INT, NOT NULL
+    ' Row 179: 댓글 내용
+    * content : TEXT, NOT NULL
+    ' Row 180: 부모 댓글 아이디 — 답글일 때 원 댓글 ID, 일반 댓글은 NULL — 1단계까지만 허용(답글의 답글 불가)
+    parent_comment_id : FK, INT, NULL
+    ' Row 181: 삭제 여부 — soft delete — 삭제된 댓글은 '삭제된 댓글입니다'로 표시(답글 유지)
+    * is_deleted : BOOLEAN, NOT NULL, DEFAULT FALSE
+    ' Row 182: 버전 — 낙관적 잠금용 — 수정·삭제가 겹치면 늦게 끝난 요청은 409 CONCURRENT_UPDATE로 실패 (삭제된 댓글이 수정으로 되살아나는 것 방지, 2026-10-08 추가)
+    * version : BIGINT, NOT NULL, DEFAULT 0
+    ' Row 183: 지지 선택지 — vote_option 참조 — 투표글 댓글이 추천하는 선택지(Jev 판정 결과). 판정 전·해당 없음·일반 글 댓글은 NULL
+    supported_option_id : FK, INT, NULL
+    ' Row 184: 판정 확률 — Jev가 준 확률(0~1). 배지는 이 값이 기준값 이상일 때만 응답에 포함 — 기준값은 한국어 표본 테스트로 정함
+    stance_probability : FLOAT, NULL
+    ' Row 185: 작성일
+    * created_at : DATETIME, NOT NULL, DEFAULT CURRENT_TIMESTAMP
+    ' Row 186: 수정일
+    updated_at : DATETIME, DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+  }
+  entity "post_like\n게시글 좋아요" as post_like {
+    ' Row 187: 게시글 아이디 — community 참조 — 복합 PK(post_id, user_id)로 사용자당 1회 (COM-05)
+    * post_id : PK, FK, INT, NOT NULL
+    ' Row 188: 사용자 아이디 — user_db.users 참조
+    * user_id : PK, FK(logical), INT, NOT NULL
+    ' Row 189: 좋아요 시각
+    * created_at : DATETIME, NOT NULL, DEFAULT CURRENT_TIMESTAMP
+  }
+  entity "comment_like\n댓글 좋아요" as comment_like {
+    ' Row 190: 댓글 아이디 — comment 참조 — 복합 PK(comment_id, user_id)로 사용자당 1회 (COM-02)
+    * comment_id : PK, FK, INT, NOT NULL
+    ' Row 191: 사용자 아이디 — user_db.users 참조
+    * user_id : PK, FK(logical), INT, NOT NULL
+    ' Row 192: 좋아요 시각
+    * created_at : DATETIME, NOT NULL, DEFAULT CURRENT_TIMESTAMP
+  }
+}
+
+package "ai_fitting_db" {
+  entity "ai_fitting\n가상피팅 작업" as ai_fitting {
+    ' Row 193: 피팅 작업 아이디 — IDM-VTON 작업 식별자
+    * fitting_id : PK, INT, NOT NULL, AUTO_INCREMENT
+    ' Row 194: 사용자 아이디
+    * user_id : FK, INT, NOT NULL
+    ' Row 195: 조합 아이디 — 누끼 이미지 매핑용
+    * combo_id : FK, VARCHAR, NOT NULL
+    ' Row 196: 결과 이미지 URL — 백엔드 완료 후 S3 저장
+    result_image_url : VARCHAR(500), NULL
+    ' Row 197: 작업 상태 — Redis 워커 상태 추적용
+    job_status : ENUM('PENDING', 'PROCESSING', 'DONE', 'FAILED') DEFAULT 'PENDING'
+    ' Row 198: 실패 사유
+    error_message : TEXT, NULL
+    ' Row 199: 요청일시
+    * created_at : DATETIME, DEFAULT CURRENT_TIMESTAMP, NOT NULL
+    ' Row 200: 완료일시
+    * completed_at : DATETIME, NOT NULL
+  }
+}
+
+package "survey_db" {
+  entity "size_survey\n사이즈 설문" as size_survey {
+    ' Row 201: 설문 아이디
+    * survey_id : PK, INT, NOT NULL, AUTO_INCREMENT
+    ' Row 202: 사용자 아이디 — user_db.users 참조
+    * user_id : FK(logical), INT, NOT NULL
+    ' Row 203: 옵션 아이디 — product_db.product_option 참조 — 사이즈별 평가라 필요
+    * option_id : FK(logical), INT, NOT NULL
+    ' Row 204: 주문 상품 아이디 — order_db.order_item 참조, 구매 검증용 — UNIQUE(user_id, order_item_id) 복합 유니크로 중복 설문 방지
+    * order_item_id : FK(logical), INT, NOT NULL, UNIQUE
+    ' Row 205: 사이즈 평가 — 작아요/잘맞아요/커요
+    * size_feedback : ENUM('SMALL', 'FIT', 'BIG'), NOT NULL
+    ' Row 206: 작성일
+    * created_at : DATETIME, NOT NULL, DEFAULT CURRENT_TIMESTAMP
+    --
+    UNIQUE(user_id, order_item_id)
+  }
+}
+
+users ||--o| user_body_profile : "user_id"
+users ||..o{ user_measurement_preference : "user_id [logical]"
+brand ||--o{ product : "brand_id"
+product ||--o{ product_option : "product_id"
+product_option ||--o| product_measurement : "option_id"
+users ||--o{ orders : "user_id"
+orders ||--o{ order_item : "order_id"
+product_option ||--o{ order_item : "option_id"
+users ||..o{ review : "user_id [logical]"
+product ||..o{ review : "product_id [logical]"
+order_item |o..o{ review : "order_item_id [logical]"
+users ||--o{ wishlist : "user_id"
+users ||..o{ worldcup_history : "user_id [logical]"
+product ||..o{ worldcup_history : "winner_product_id [logical]"
+users ||--o{ cart : "user_id"
+product_option ||--o{ cart : "option_id"
+users |o..o{ recommendation_request : "user_id [logical]"
+recommendation_request ||--o{ recommendation_slot : "request_id"
+recommendation_slot ||--o{ slot_candidate : "slot_id"
+product ||..o{ slot_candidate : "product_id [logical]"
+recommendation_request ||--o{ outfit_combo : "request_id"
+recommendation_request ||--o{ recommendation_message : "request_id"
+outfit_combo ||--o{ combo_candidate : "combo_id"
+slot_candidate ||--o{ combo_candidate : "candidate_id"
+users ||..o{ notification_channel : "user_id [logical]"
+users ||..o{ notification_log : "user_id [logical]"
+users ||--o{ community : "user_id"
+community ||--o{ vote_option : "post_id"
+community ||--o{ vote : "post_id"
+users ||..o{ vote : "user_id [logical]"
+vote_option ||--o{ vote : "vote_option_id"
+community ||--o{ comment : "post_id"
+users ||..o{ comment : "user_id [logical]"
+comment |o--o{ comment : "parent_comment_id"
+vote_option |o--o{ comment : "supported_option_id"
+community ||--o{ post_like : "post_id"
+users ||..o{ post_like : "user_id [logical]"
+comment ||--o{ comment_like : "comment_id"
+users ||..o{ comment_like : "user_id [logical]"
+users ||--o{ ai_fitting : "user_id"
+outfit_combo ||--o{ ai_fitting : "combo_id"
+users ||..o{ size_survey : "user_id [logical]"
+product_option ||..o{ size_survey : "option_id [logical]"
+order_item ||..o{ size_survey : "order_item_id [logical]"
+product |o..o{ wishlist : "item_id [PRODUCT]"
+outfit_combo |o..o{ wishlist : "item_id [COMBO]"
+product |o..o{ vote_option : "item_id [PRODUCT]"
+outfit_combo |o..o{ vote_option : "item_id [COMBO]"
+outfit_combo |o..o{ community : "shared_id [COMBO]"
+worldcup_history |o..o{ community : "shared_id [WORLDCUP]"
+ai_fitting |o..o{ community : "shared_id [FITTING]"
+community |o..o{ notification_log : "target_id [COMMENT / VOTE_CLOSED]"
+ai_fitting |o..o{ notification_log : "target_id [FITTING_DONE / FITTING_FAILED]"
+
+legend bottom left
+  * : NOT NULL explicitly stated in specification
+  PK / FK / UNIQUE : source constraints; composite PK spans marked columns
+  Solid line : FK stated in specification
+  Dotted line : logical, inferred, or conditional reference
+  Parent || : required reference; |o : nullable/conditional reference
+  Child o{ : zero or more; o| : zero or one (shared primary key)
+  Gray entity : unused in source specification
+  ENUM / VARCHAR without details and missing types are preserved as specified
+endlegend
+@enduml
+
