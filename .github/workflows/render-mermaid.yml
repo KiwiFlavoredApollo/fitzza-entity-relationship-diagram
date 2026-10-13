@@ -38,15 +38,27 @@ jobs:
       - name: Generate PNG images
         run: bash scripts/render_mermaid.sh
 
+      - name: Package PNG images as ZIP
+        shell: pwsh
+        env:
+          DIAGRAM_VERSION: ${{ github.ref_name }}
+        run: |
+          $archiveVersion = $env:DIAGRAM_VERSION -replace '[^A-Za-z0-9._-]', '-'
+          $archivePath = "build/fitzza-entity-relationship-diagram-$archiveVersion.zip"
+          Compress-Archive -Path build/images/* -DestinationPath $archivePath -Force
+          "ARCHIVE_PATH=$archivePath" >> $env:GITHUB_ENV
+
       - name: Upload PNG images
         uses: actions/upload-artifact@v4
         with:
           name: mermaid-png-${{ github.run_number }}
-          path: build/images/**/*.png
+          path: |
+            build/images/**/*.png
+            build/fitzza-entity-relationship-diagram-*.zip
           if-no-files-found: error
           retention-days: 30
 
-      - name: Attach PNG images to GitHub Release
+      - name: Attach PNG images and ZIP to GitHub Release
         if: startsWith(github.ref, 'refs/tags/v')
         env:
           GH_TOKEN: ${{ github.token }}

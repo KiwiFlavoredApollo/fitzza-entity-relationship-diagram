@@ -34,6 +34,8 @@ git push origin v1.0.0
 
 Release 생성과 첨부에는 기본 `GITHUB_TOKEN`의 `contents: write` 권한을 사용하므로 별도 토큰 설정은 필요 없습니다. [Release 생성](https://cli.github.com/manual/gh_release_create) 및 [파일 첨부](https://cli.github.com/manual/gh_release_upload)는 GitHub CLI로 처리합니다.
 
+전체 이미지를 한 번에 받으려면 **Releases → 해당 버전 → Assets → `fitzza-entity-relationship-diagram-<버전 태그>.zip`**을 다운로드하세요. 예를 들어 `v0.0.1` 태그는 `fitzza-entity-relationship-diagram-v0.0.1.zip`을 생성합니다. ZIP에는 전체 ERD, 테이블 개요, 도메인별 PNG가 디렉토리 구조와 함께 포함됩니다. 개별 PNG도 계속 첨부하며 ZIP은 Actions 아티팩트에도 포함합니다. 브랜치에서 수동 실행하면 태그 대신 브랜치 이름을 사용하며, 파일명에 사용할 수 없는 문자는 하이픈으로 바꿉니다.
+
 렌더링은 커밋된 `.mmd` 파일을 사용합니다. `diagrams` 아래에 Markdown 파일을 생성하지 않으며, 렌더링 실패 시 워크플로가 실패합니다.
 
 Items requiring clarification in the specification:
