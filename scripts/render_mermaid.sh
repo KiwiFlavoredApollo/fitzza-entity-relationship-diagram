@@ -22,7 +22,6 @@ for source in "${sources[@]}"; do
     --configFile scripts/mermaid-config.json \
     --puppeteerConfigFile scripts/puppeteer-config.json \
     --backgroundColor white \
-    --width 2400 \
     --scale 2
   test -s "$target"
 done

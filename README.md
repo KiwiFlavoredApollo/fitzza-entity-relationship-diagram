@@ -9,7 +9,7 @@
 
 `fitzza-erd.mmd`는 29개 테이블, 203개 컬럼, 53개 관계를 담은 원본입니다. PK/FK/UK, 카디널리티, 논리적·조건부 참조를 보존합니다. DB 구분은 소스 주석과 도메인별 파일로 제공합니다. 복합 UNIQUE와 원본 설명은 주석에, ENUM 값과 기본값 등은 컬럼 설명에 보존합니다. 원본에서 타입이 지정되지 않은 컬럼은 `UNSPECIFIED`로 표시합니다.
 
-`fitzza-erd.mmd` 수정 후 다음 명령으로 Markdown과 도메인별 Mermaid 파일을 다시 생성합니다. 별도 패키지 설치는 필요 없습니다.
+`fitzza-erd.mmd` 수정 후 다음 명령으로 전체 ERD Markdown과 도메인별 Mermaid 파일을 다시 생성합니다. `diagrams` 아래에는 `.mmd` 파일만 생성합니다. 별도 패키지 설치는 필요 없습니다.
 
 ```sh
 node scripts/generate_mermaid.mjs
@@ -27,6 +27,8 @@ git push origin v1.0.0
 ```
 
 태그의 전체 ERD, 테이블 개요, 12개 도메인 ERD를 PNG로 렌더링합니다. 한글 폰트와 흰 배경을 사용하며 이미지는 `build/images/`에 생성합니다. Mermaid CLI 사용법은 [공식 문서](https://github.com/mermaid-js/mermaid-cli)를 참고하세요.
+
+연결선은 ELK 레이아웃으로 수평·수직 경로를 사용합니다. 모서리와 교차점에는 렌더러의 기본 둥근 처리와 교차 표시가 적용됩니다. Actions는 ELK를 내장한 Mermaid CLI 12.0.0을 사용하며, `.mmd` 소스에도 `layout: elk` 설정을 포함합니다. Markdown 미리보기의 모양은 해당 서비스의 Mermaid 버전과 ELK 지원에 따라 달라질 수 있으므로, 배포 결과는 Release의 PNG로 확인하세요. 레이아웃 지원은 [Mermaid 공식 문서](https://mermaid.js.org/config/layouts)를 참고하세요.
 
 **Actions → Render Mermaid PNG → 실행 결과 → Artifacts**에서 `mermaid-png-<실행 번호>`를 다운로드하면 됩니다. 보관 기간은 30일이며 저장소의 보관 정책이 적용됩니다. GitHub Actions 아티팩트 저장 방식은 [공식 문서](https://github.com/actions/upload-artifact)에 설명되어 있습니다. 기본 브랜치에서는 **Run workflow**로 수동 실행할 수도 있습니다.
 

@@ -1,9 +1,13 @@
 {
   "theme": "default",
+  "layout": "elk",
+  "look": "classic",
   "fontFamily": "Noto Sans CJK KR, sans-serif",
   "maxTextSize": 200000,
   "maxEdges": 500,
   "er": {
+    "theme": "default",
+    "look": "classic",
     "useMaxWidth": false
   }
 }
