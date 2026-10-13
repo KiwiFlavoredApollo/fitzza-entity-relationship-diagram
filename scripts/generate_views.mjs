@@ -7,10 +7,10 @@ import assert from 'node:assert/strict';
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const source = readFileSync(resolve(root, 'fitzza-erd.puml'), 'utf8').replaceAll('\r\n', '\n');
 const output = resolve(root, 'diagrams');
-const style = `!pragma layout smetana
-left to right direction
+const style = `left to right direction
 skinparam backgroundColor #FFFFFF
 skinparam defaultFontName SansSerif
+skinparam linetype ortho
 skinparam shadowing false
 skinparam packageStyle rectangle
 skinparam nodesep 65
@@ -75,7 +75,10 @@ for (let i = 0; i < domainNames.length; i++) {
   if (i + 3 < domainNames.length)
     overview.push(`${domainNames[i]} -[hidden]down- ${domainNames[i + 3]}`);
 }
-overview.push('legend bottom left', '  개요: PK와 도메인 내부 관계만 표시',
+overview.push('legend bottom left', '  개요: 기본 키(PK)와 도메인 내부 관계만 표시',
+  '  실선: 명시된 외래 키 관계 / 점선: 논리적·조건부 참조',
+  '  ||: 필수 참조 / |o: 선택 참조 / o{: 0개 이상 / o|: 최대 1개',
+  '  회색 테이블: 명세서에서 미사용으로 표시된 테이블',
   '  도메인 간 관계와 전체 컬럼: diagrams/<domain>.puml 참조',
   '  모든 관계를 한 장에 표시: fitzza-erd.puml 참조', 'endlegend', '@enduml', '');
 writeFileSync(resolve(output, 'fitzza-overview.puml'), overview.join('\n'));

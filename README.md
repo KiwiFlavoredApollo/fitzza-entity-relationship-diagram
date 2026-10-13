@@ -18,7 +18,7 @@ Tables are grouped by database domain. Solid lines represent specified FKs; dott
 node scripts/generate_views.mjs
 ```
 
-상세 도면은 직각 라우팅 대신 기본 연결선을 사용하고 테이블 간 간격을 넓혔습니다. SVG로 렌더링하면 확대하면서 컬럼과 관계를 읽기 편합니다. 태그 및 수동 실행 워크플로는 개요와 상세 도면도 함께 렌더링합니다.
+모든 도면은 직각 연결선(`skinparam linetype ortho`)을 사용하며, 좌측 하단에 한글 범례를 표시합니다. 상세 도면은 테이블 간 간격을 넓혔습니다. SVG로 렌더링하면 확대하면서 컬럼과 관계를 읽기 편합니다. 태그 및 수동 실행 워크플로는 개요와 상세 도면도 함께 렌더링합니다.
 
 Items requiring clarification in the specification:
 
