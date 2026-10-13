@@ -4,6 +4,22 @@
 
 Tables are grouped by database domain. Solid lines represent specified FKs; dotted lines represent logical or conditional references. Unused fields and tables remain included. English table names without explicit names in the sheet are inferred. Source notes are preserved as PlantUML comments.
 
+## 읽기 쉬운 도면
+
+- [도메인 개요](diagrams/fitzza-overview.puml): 29개 테이블의 PK와 도메인 내부 관계만 표시합니다. 전체 구조를 먼저 확인할 때 사용합니다.
+- [도메인별 상세 도면](diagrams): 각 DB의 전체 컬럼과 관계를 표시합니다. 외부 테이블은 연한 보라색으로 참조 키만 표시해 긴 연결선을 줄입니다.
+- [전체 상세 ERD](fitzza-erd.puml): 모든 컬럼과 관계를 한 장에서 확인하는 원본입니다.
+
+각 관계는 **참조하는 테이블이 속한 DB의 상세 도면**에 표시됩니다. 예를 들어 상품과 리뷰의 관계는 `review_db.puml`에 있습니다. 12개 상세 도면을 합치면 원본의 53개 관계가 모두 포함됩니다. 개요 도면에서는 도메인 간 관계를 생략하므로, 관계 확인은 상세 도면을 사용하세요.
+
+수정은 `fitzza-erd.puml`에서 하고, Node.js로 도면을 다시 생성합니다. 별도 패키지 설치는 필요 없습니다.
+
+```sh
+node scripts/generate_views.mjs
+```
+
+상세 도면은 직각 라우팅 대신 기본 연결선을 사용하고 테이블 간 간격을 넓혔습니다. SVG로 렌더링하면 확대하면서 컬럼과 관계를 읽기 편합니다. 태그 및 수동 실행 워크플로는 개요와 상세 도면도 함께 렌더링합니다.
+
 Items requiring clarification in the specification:
 
 - Some VARCHAR lengths, ENUM values, and timestamp types are unspecified.
