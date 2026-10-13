@@ -1,7 +1,7 @@
 @startuml fitzza-erd
 ' Source: https://docs.google.com/spreadsheets/d/11iPQ3YFhEUBNp-2VAse4qQpHFEm6ymTOGz5_9-XCA6Y/edit#gid=448104477
 ' Snapshot: 2026-10-13. English table names are inferred from Korean labels/references.
-left to right direction
+top to bottom direction
 skinparam backgroundColor #FFFFFF
 skinparam defaultFontName SansSerif
 skinparam linetype ortho
@@ -522,6 +522,8 @@ package "survey_db" {
   }
 }
 
+' Canonical relationships for the view generator; rendered as isolated panels below.
+!if %false()
 users ||--o| user_body_profile : "user_id"
 users ||--o{ user_measurement_preference : "user_id"
 brand ||--o{ product : "brand_id"
@@ -575,6 +577,8 @@ worldcup_history |o..o{ community : "shared_id [WORLDCUP]"
 ai_fitting |o..o{ community : "shared_id [FITTING]"
 community |o..o{ notification_log : "target_id [COMMENT / VOTE_CLOSED]"
 ai_fitting |o..o{ notification_log : "target_id [FITTING_DONE / FITTING_FAILED]"
+!endif
+!include diagrams/fitzza-relations.iuml
 
 legend bottom left
   * : 명세서에 NOT NULL로 명시된 필수 컬럼
@@ -585,7 +589,9 @@ legend bottom left
   부모 쪽 || : 필수 참조, |o : NULL 허용 또는 조건부 참조
   자식 쪽 o{ : 0개 이상, o| : 0개 또는 1개 (공유 PK 또는 UNIQUE FK)
   회색 테이블 : 명세서에서 미사용으로 표시된 테이블
-  연한 보라색 테이블 : 다른 도메인의 외부 참조 (참조 키만 표시)
+  관계 패널 : 관계마다 테이블을 반복 표시하여 연결선 겹침 방지
+  연한 보라색 테이블 : 관계의 참조 대상 (기본 키만 표시)
+  관계 번호 옆 컬럼명 : 자식 테이블의 참조 컬럼 및 조건
   ENUM 값·VARCHAR 길이·자료형이 미정인 항목은 명세서 그대로 유지
 endlegend
 @enduml
