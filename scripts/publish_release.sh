@@ -16,10 +16,11 @@ if (( ${#images[@]} == 0 )); then
 fi
 
 if gh release view "$RELEASE_TAG" --repo "$GH_REPO" >/dev/null 2>&1; then
+  gh release edit "$RELEASE_TAG" --repo "$GH_REPO" --title "Fitzza ERD $RELEASE_TAG"
   gh release upload "$RELEASE_TAG" "${images[@]}" --repo "$GH_REPO" --clobber
 else
   # Verify the pushed tag; upload assets before publishing the new release.
-  options=(--verify-tag --title "$RELEASE_TAG" --notes 'Mermaid ERD diagrams in PNG format.')
+  options=(--verify-tag --title "Fitzza ERD $RELEASE_TAG" --notes 'Mermaid ERD diagrams in PNG format.')
   if [[ "$RELEASE_TAG" == *-* ]]; then
     options+=(--prerelease)
   fi
