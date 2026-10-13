@@ -1,0 +1,55 @@
+name: Render Mermaid PNG
+
+on:
+  push:
+    tags:
+      - 'v[0-9]*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: mermaid-png-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  render:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - name: Check out tagged source
+        uses: actions/checkout@v5
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: '24'
+
+      - name: Install Korean fonts
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes fonts-noto-cjk
+          fc-cache -f
+
+      - name: Install Mermaid CLI
+        run: npm install --prefix .tools/mermaid --no-audit --no-fund @mermaid-js/mermaid-cli@11.12.0
+
+      - name: Generate PNG images
+        run: bash scripts/render_mermaid.sh
+
+      - name: Upload PNG images
+        uses: actions/upload-artifact@v4
+        with:
+          name: mermaid-png-${{ github.run_number }}
+          path: build/images/**/*.png
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Attach PNG images to GitHub Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: bash scripts/publish_release.sh

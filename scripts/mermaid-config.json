@@ -1,0 +1,9 @@
+{
+  "theme": "default",
+  "fontFamily": "Noto Sans CJK KR, sans-serif",
+  "maxTextSize": 200000,
+  "maxEdges": 500,
+  "er": {
+    "useMaxWidth": false
+  }
+}
